@@ -4,13 +4,15 @@ import datetime
 import urllib
 import urllib2
 import logging
+import json
 
 from couchdbkit  import Server, Consumer
 
 server_account_name="ugnotify@gmail.com"
 server_account_password="12$gug56"
 collapse_key=1
-accountName = "chris@vetula.com"
+# accountName = "chris@vetula.com"
+accountName = "kayunganda@gmail.com"
 url = "http://192.168.0.3:8080/sender?accountName="+accountName
 f = urllib2.urlopen(url)
 registrationId = f.read()
@@ -30,12 +32,6 @@ def sendMessage( accountName, registrationId, text ):
     }
     logging.info( "authToken: "+authToken )
     form_data = urllib.urlencode(form_fields)
-    #result = urlfetch.fetch(url="http://android.apis.google.com/c2dm/send",
-    #                payload=form_data,
-    #                method=urlfetch.POST,
-    #                headers={'Content-Type': 'application/x-www-form-urlencoded',
-    #                         'Authorization': 'GoogleLogin auth='+authToken
-    #                        })
     c2dmUrl="http://android.apis.google.com/c2dm/send"
     req = urllib2.Request(c2dmUrl, form_data)
     # req.add_header("Authorization," "GoogleLogin auth="+authToken)
@@ -58,10 +54,6 @@ def getAuthToken():
     }
     form_data = urllib.urlencode(form_fields)
     authLoginUrl="https://www.google.com/accounts/ClientLogin"
-    # result = urlfetch.fetch(url="https://www.google.com/accounts/ClientLogin",
-    #                payload=form_data,
-    #                method=urlfetch.POST,
-    #                headers={'Content-Type': 'application/x-www-form-urlencoded'})
     req = urllib2.Request(authLoginUrl, form_data)
     response = urllib2.urlopen(req)
     statuscode = response.getcode()
@@ -79,8 +71,6 @@ def getAuthToken():
     logging.error( "error code: "+str(result.status_code)+"; error message: "+result.content )
     return ""
 
-
-
 # server object
 server = Server('http://admin:luvcouch@localhost:5984')
 
@@ -88,8 +78,18 @@ server = Server('http://admin:luvcouch@localhost:5984')
 db = server.get_or_create_db("coconut")
 
 c = Consumer(db)
-def print_line(line): 
-    print "got %s" % line 
-    status = sendMessage( accountName, registrationId, text )
-c.wait(print_line,since=5,heartbeat=True) # Go into receive loop
+def sendCouchMessage(line): 
+    #print "got %s" % line 
+    print json.dumps(line)
+    id = line['id']
+    
+    print "id: " + id
+    doc = db.get(id) 
+    if 'phone' in doc:
+    	phone = doc['phone']
+    	print json.dumps(doc)
+    	message = "Message from " + phone
+    	status = sendMessage( accountName, registrationId, message )
+
+c.wait(sendCouchMessage,since=5,heartbeat=True) # Go into receive loop
 
