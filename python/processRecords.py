@@ -16,8 +16,7 @@ accountName = "kayunganda@gmail.com"
 url = "http://192.168.0.3:8080/sender?accountName="+accountName
 f = urllib2.urlopen(url)
 registrationId = f.read()
-print registrationId
-text="This is a test from python."
+print "registrationId for " + accountName + ": " + registrationId
 
 def sendMessage( accountName, registrationId, text ):
     global collapse_key
@@ -39,7 +38,8 @@ def sendMessage( accountName, registrationId, text ):
     response = urllib2.urlopen(req)
     statuscode = response.getcode()
     collapse_key=collapse_key+1
-    result = response.read()    
+    result = response.read()
+    print "sendMessage result: " + result
     return result
 
 def getAuthToken():
@@ -89,7 +89,7 @@ def sendCouchMessage(line):
     	phone = doc['phone']
     	print json.dumps(doc)
     	message = "Message from " + phone
+    	print message
     	status = sendMessage( accountName, registrationId, message )
-
 c.wait(sendCouchMessage,since=5,heartbeat=True) # Go into receive loop
 
